@@ -132,10 +132,12 @@ Quality RawDataReaderCheck::check(std::map<std::string, std::shared_ptr<MonitorO
       }
     } else if (mo->getName() == "inputs") {
       // std::cout << "bin 48:" << h->GetBinContent(o2::ctp::CTP_NINPUTS+1) << " 1 " << h->GetBinContent(1) << std::endl;
-      h->Scale(1. / h->GetBinContent(o2::ctp::CTP_NINPUTS + 1) / TimeTF);
-      TH1F* fHistDifference = (TH1F*)h->Clone();
+
+      // no need to scale the plot, since it is already normalized
+      //h->Scale(1. / h->GetBinContent(o2::ctp::CTP_NINPUTS + 1) / TimeTF);
+
       if (fHistInputPrevious) {
-        checkChange(fHistDifference, fHistInputPrevious, vIndexBad, vIndexMedium);
+        checkChange(h, fHistInputPrevious, vIndexBad, vIndexMedium);
         delete fHistInputPrevious;
       }
       fHistInputPrevious = (TH1F*)h->Clone();
@@ -150,9 +152,8 @@ Quality RawDataReaderCheck::check(std::map<std::string, std::shared_ptr<MonitorO
     } else if (mo->getName() == "classes") {
       // std::cout << "bin 64:" << h->GetBinContent(o2::ctp::CTP_NCLASSES+1) << " 1 " << h->GetBinContent(1) << std::endl;
       h->Scale(1. / h->GetBinContent(o2::ctp::CTP_NCLASSES + 1) / TimeTF);
-      TH1F* fHistDifference = (TH1F*)h->Clone();
       if (fHistClassesPrevious) {
-        checkChange(fHistDifference, fHistClassesPrevious, vIndexBad, vIndexMedium);
+        checkChange(h, fHistClassesPrevious, vIndexBad, vIndexMedium);
         delete fHistClassesPrevious;
       }
       fHistClassesPrevious = (TH1F*)h->Clone();
@@ -179,21 +180,21 @@ Quality RawDataReaderCheck::check(std::map<std::string, std::shared_ptr<MonitorO
   // LOG(info) << "Cycle ===================>" << cycleCounter;
   return result;
 }
-int RawDataReaderCheck::checkChange(TH1F* fHistDifference, TH1F* fHistPrev, std::vector<int>& vIndexBad, std::vector<int>& vIndexMedium)
+int RawDataReaderCheck::checkChange(TH1F* fHist, TH1F* fHistPrev, std::vector<int>& vIndexBad, std::vector<int>& vIndexMedium)
 {
-  fHistDifference->Add(fHistPrev, -1); // Calculate relative difference w.r.t. rate in previous cycle
-  fHistDifference->Divide(fHistPrev);
-
   float thrBad = mThresholdRateBad;
   float thrMedium = mThresholdRateMedium;
   if (flagRatio) {
     thrBad = mThresholdRateRatioBad;
     thrMedium = mThresholdRateRatioMedium;
   }
-  for (size_t i = 1; i < fHistDifference->GetXaxis()->GetNbins() + 1; i++) { // Check how many inputs/classes changed more than a threshold value
-    if (TMath::Abs(fHistDifference->GetBinContent(i)) > thrBad) {
+  for (size_t i = 1; i < fHist->GetXaxis()->GetNbins() + 1; i++) { // Check how many inputs/classes changed more than a threshold value
+    double val = fHist->GetBinContent(i);
+    double valPrev = fHistPrev->GetBinContent(i);
+    double relDiff = (valPrev != 0) ? (val - valPrev) / valPrev : 0;
+    if (TMath::Abs(relDiff) > thrBad) {
       vIndexBad.push_back(i);
-    } else if (TMath::Abs(fHistDifference->GetBinContent(i)) > thrMedium) {
+    } else if (TMath::Abs(relDiff) > thrMedium) {
       vIndexMedium.push_back(i);
     }
   }

@@ -20,10 +20,14 @@
 
 #include "QualityControl/TaskInterface.h"
 #include "CTPReconstruction/RawDataDecoder.h"
+#include "Common/TH1Ratio.h"
+
+#include <memory>
 
 class TH1F;
 
 using namespace o2::quality_control::core;
+using namespace o2::quality_control_modules::common;
 
 namespace o2::quality_control_modules::ctp
 {
@@ -48,7 +52,7 @@ class CTPRawDataReaderTask final : public TaskInterface
 
  private:
   o2::ctp::RawDataDecoder mDecoder;
-  TH1F* mHistoInputs = nullptr;
+  std::unique_ptr<TH1FRatio> mHistoInputs;
   TH1F* mHistoClasses = nullptr;
   TH1F* mHistoInputRatios = nullptr;
   TH1F* mHistoClassRatios = nullptr;

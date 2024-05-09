@@ -48,7 +48,7 @@ class RawDataReaderCheck : public o2::quality_control::checker::CheckInterface
  private:
   int getRunNumberFromMO(std::shared_ptr<MonitorObject> mo);
   int getNumberFilledBins(TH1F* hist);
-  int checkChange(TH1F* fHistDiference, TH1F* fHistPrev, std::vector<int>& vIndexBad, std::vector<int>& vIndexMedium);
+  int checkChange(TH1F* fHist, TH1F* fHistPrev, std::vector<int>& vIndexBad, std::vector<int>& vIndexMedium);
   int mRunNumber;
   long int mTimestamp;
   float mThreshold;
